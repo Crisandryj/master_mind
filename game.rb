@@ -1,141 +1,145 @@
 require_relative 'player'
 require_relative 'computer'
-class Game
-    attr_reader :player, :board
-    attr_accessor :code
+
+class Game 
+    attr_accessor :code, :board, :intersect, :included
   
-    def initialize(player_class)
+    def initialize(name,computer_class)
       @board = [[], [], [], [], [], [], [], [], [], [], [], []]
       @code = []
-      @player = player_class.new('Jon')
       @intersect
       @included
+      @player = Player.new(name)
+      @computer = Computer.new
+      @codeHash = Hash.new(0)
+      @guessHash = Hash.new(0)
     end
-  
-    def guessCombo(num)
-      count = 0
-      until count == 4
-      letter = gets.chomp
-      @board[num] << letter
-      count += 1
-      end
+    
+    def createHash(turn)
+      @code.each_with_index { |element, index| @codeHash[index] = element }
+      @board[turn].each_with_index { |element, index| @guessHash[index] = element }
+    end 
+
+     # if the color is included in the code    
+    def letterIncluded(turn)
+      createHash(turn)
+      @included = @guessHash.select { |k, v| @code.include?(v)}
     end
-  
-    def randomCode
-       code.push(rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr)
+
+    # if the value and postion are equal1
+    def intersect(turn)
+      createHash(turn)
+      @intersect = @guessHash.select { |k, v| (@codeHash.include?(k) && @codeHash[k] == v) }
     end
-  
-    def letterIncluded(num)
-      codeHash = Hash.new(0)
-      guessHash = Hash.new(0)
-      @board[num].each_with_index { |element, index| guessHash[index] = element }
-      @code.each_with_index { |element, index| codeHash[index] = element }
-      # if the color is included in the code
-      @included = guessHash.select { |k, v| @code.include?(v)}
-    end
-  
-    def intersect(num)
-      codeHash = Hash.new(0)
-      guessHash = Hash.new(0)
-      @board[num].each_with_index { |element, index| guessHash[index] = element }
-      @code.each_with_index { |element, index| codeHash[index] = element }
-      # if the value and postion are equal
-      @intersect = guessHash.select { |k, v| (codeHash.include?(k) && codeHash[k] == v) }
-    end
-  
+
+    # included both @intersect and @included
     def includedOrIntersect
-      # included both @intersect and @included
       @intersect.select {|k,v| @included[k] == v}
     end 
 
-    def createGameCode
-      count = 0
-      until count == 4
-      letter = gets.chomp
-      @code << letter
-      count += 1
-      end
-      @code
+    def feedback(turn)
+      letterIncluded(turn)
+      intersect(turn)
+      p 'Correct letter(s) out of position:'
+      p letterIncluded(turn).length - includedOrIntersect.length
+      p 'Correct letter(s) in correct position(s):'
+      p includedOrIntersect.length
     end 
-  
-    def playerPlay
-      num = 0
-      gameCode = randomCode
-      p gameCode
-      until num == 12
-        puts 'Player, guess the combo using letter A-E (enter one letter at a time):'
-        puts "Turn: #{num + 1}"
-        guessCombo(num)
-        p @board
-        if @board[num] == gameCode
-          puts 'Player wins!'
-          return
+
+    def computerLogic(turn,nextGuess)
+
+      if letterIncluded(turn).length > 0
+        letterIncluded(turn).each do |k,v| 
+          nextGuess.insert(k,v)
         end
-        intersect(num)
-        p 'Correct letter(s) out of position:'
-        p letterIncluded(num).length - includedOrIntersect.length
-        p 'Correct letter(s) in correct position(s):'
-        p includedOrIntersect.length
-  
-        num += 1
+      end 
+
+      if letterIncluded(turn).length > 0 && includedOrIntersect.length == 0
+        nextGuess.shuffle!
+      end 
+
+      if includedOrIntersect.length > 0 && includedOrIntersect.length > 0
+          nextGuess.shuffle!
+          includedOrIntersect.each {|k,v| nextGuess[k] = v}
+      end
+      
+      if nextGuess.length < 4
+        until nextGuess.length == 4
+        nextGuess.push(rand(65..70).chr)
+        end 
+      end 
+
+      if nextGuess.include?(nil)
+        nextGuess.map! {|v| v || rand(65..70).chr}
+      end 
+
+    end
+
+    def playerWins?(turn,gameCode)
+      @board[turn] == gameCode
+    end 
+
+    def compWins?(turn,gameCode)
+      if @board[turn] == gameCode
+        puts 'Computer wins!'
+        return
       end
     end 
 
-    def computerPlay
-      nextGuess = [rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr]
-      num = 0
-      gameCode = createGameCode
-      until num == 12
+    def randomCode
+      code.push(rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr)
+    end
+
+    def playerMaker
+      nextGuess = @computer.compFirstGuess
+      turn = 0
+      puts "Create code:"
+      @code.replace(@player.createGameCode)
+      gameCode = @code
+      @board[turn].replace(nextGuess)
+      until turn == 12
         p gameCode
         puts 'Computer, guess the combo using letter A-E (enter one letter at a time):'
-        puts "Turn: #{num}"
-        @board[num].replace(nextGuess)
+        puts "Turn: #{turn + 1}"
+        @board[turn].replace(nextGuess)
         nextGuess = []
         p @board
-        if @board[num] == gameCode
-          puts 'Computer wins!'
-          return
-        end
-        intersect(num)
-        letterIncluded(num)
-        if letterIncluded(num).length > 0
-          letterIncluded(num).each do |k,v| 
-            nextGuess.insert(k,v)
-          end
-        end 
-          if letterIncluded(num).length > 0 && includedOrIntersect.length == 0
-            nextGuess.shuffle!
-          end 
+        letterIncluded(turn)
+        intersect(turn)
+        computerLogic(turn,nextGuess) 
+        compWins?(turn,gameCode)
+        turn += 1
+      end
 
-          if includedOrIntersect.length > 0 && includedOrIntersect.length > 0
-              nextGuess.shuffle!
-              includedOrIntersect.each {|k,v| nextGuess[k] = v}
-          end
-          
-          if nextGuess.length < 4
-            until nextGuess.length == 4
-            nextGuess.push(rand(65..70).chr)
-            end 
-          end 
+    end
 
-          if nextGuess.include?(nil)
-            nextGuess.map! {|v| v || rand(65..70).chr}
-          end 
-        num += 1
+
+    def playerBreaker(gameCode)
+      turn = 0
+      until turn == 12
+        p @board
+        puts "Turn: #{turn +1}"
+        @board[turn].replace(@player.guessCombo)
+        return puts "Player Wins!!!" if playerWins?(turn,gameCode)
+        feedback(turn)
+        turn += 1
       end
     end 
 
     def codeBreakerOrMaker
-      puts "Do you want to create the code or guess the code?(guess/create)"
+      puts "Do you want to make the code or break the code?(M/B)"
       answer = gets.chomp.downcase
-      if answer == "guess"
-        playerPlay
-      elsif answer == "create"
-        computerPlay
+      if answer == "b"
+        gameCode = randomCode
+        p gameCode
+        puts 'Player, guess the combo using letter A-E (enter one letter at a time):'
+        playerBreaker(gameCode)
+      elsif answer == "m"
+        playerMaker
       else
-        p "guess or create"
-        answer = gets.chomp.downcase
+        return
       end 
-     end   
+     end  
+
   end
 
