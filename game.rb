@@ -125,7 +125,7 @@ class Game
       end
     end 
 
-    def play
+    def codeBreakerOrMaker
       puts "Do you want to create the code or guess the code?(guess/create)"
       answer = gets.chomp.downcase
       if answer == "guess"

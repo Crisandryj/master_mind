@@ -5,14 +5,15 @@ class Computer < Game
   
     def initialize(game)
     @game = game
+    @nextGuess
     end    
 
-    def guess
-
+    def computerGuess
+      @nextGuess = [rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr]
     end 
     
     def computerPlay
-    nextGuess = [rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr]
+      guess
     num = 0
     gameCode = createGameCode
     until num == 12
