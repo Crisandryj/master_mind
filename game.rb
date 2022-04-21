@@ -10,7 +10,7 @@ class Game
       @intersect
       @included
       @player = Player.new(name)
-      @computer = Computer.new
+      @computer = Computer.new(self)
       @codeHash = Hash.new(0)
       @guessHash = Hash.new(0)
     end
@@ -26,7 +26,7 @@ class Game
       @included = @guessHash.select { |k, v| @code.include?(v)}
     end
 
-    # if the value and postion are equal1
+    # if the value and postion are equal
     def intersect(turn)
       createHash(turn)
       @intersect = @guessHash.select { |k, v| (@codeHash.include?(k) && @codeHash[k] == v) }
@@ -46,35 +46,10 @@ class Game
       p includedOrIntersect.length
     end 
 
-    def computerLogic(turn,nextGuess)
-
-      if letterIncluded(turn).length > 0
-        letterIncluded(turn).each do |k,v| 
-          nextGuess.insert(k,v)
-        end
-      end 
-
-      if letterIncluded(turn).length > 0 && includedOrIntersect.length == 0
-        nextGuess.shuffle!
-      end 
-
-      if includedOrIntersect.length > 0 && includedOrIntersect.length > 0
-          nextGuess.shuffle!
-          includedOrIntersect.each {|k,v| nextGuess[k] = v}
-      end
-      
-      if nextGuess.length < 4
-        until nextGuess.length == 4
-        nextGuess.push(rand(65..70).chr)
-        end 
-      end 
-
-      if nextGuess.include?(nil)
-        nextGuess.map! {|v| v || rand(65..70).chr}
-      end 
-
+    def randomCode
+      code.push(rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr)
     end
-
+    
     def playerWins?(turn,gameCode)
       @board[turn] == gameCode
     end 
@@ -85,10 +60,6 @@ class Game
         return
       end
     end 
-
-    def randomCode
-      code.push(rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr)
-    end
 
     def playerMaker
       nextGuess = @computer.compFirstGuess
@@ -106,7 +77,7 @@ class Game
         p @board
         letterIncluded(turn)
         intersect(turn)
-        computerLogic(turn,nextGuess) 
+        @computer.computerLogic(turn,nextGuess) 
         compWins?(turn,gameCode)
         turn += 1
       end
