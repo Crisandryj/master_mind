@@ -14,7 +14,7 @@ class Computer
     def computerLogic(turn,nextGuess)
 
       if @game.letterIncluded(turn).length > 0
-        @game.letterIncluded(turn).each do |k,v| 
+         @game.letterIncluded(turn).each do |k,v| 
           nextGuess.insert(k,v)
         end
       end 

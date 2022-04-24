@@ -20,19 +20,19 @@ class Game
       @board[turn].each_with_index { |element, index| @guessHash[index] = element }
     end 
 
-     # if the color is included in the code    
+     # check if the color is included in the code    
     def letterIncluded(turn)
       createHash(turn)
       @included = @guessHash.select { |k, v| @code.include?(v)}
     end
 
-    # if the value and postion are equal
+    # check if the value and postion are equal
     def intersect(turn)
       createHash(turn)
       @intersect = @guessHash.select { |k, v| (@codeHash.include?(k) && @codeHash[k] == v) }
     end
 
-    # included both @intersect and @included
+    # check if both included both @intersect and @included
     def includedOrIntersect
       @intersect.select {|k,v| @included[k] == v}
     end 
@@ -49,7 +49,7 @@ class Game
     def randomCode
       code.push(rand(65..70).chr, rand(65..70).chr, rand(65..70).chr,rand(65..70).chr)
     end
-    
+
     def playerWins?(turn,gameCode)
       @board[turn] == gameCode
     end 
@@ -83,7 +83,6 @@ class Game
       end
 
     end
-
 
     def playerBreaker(gameCode)
       turn = 0
